@@ -211,12 +211,7 @@ uploaded = st.file_uploader(
     help="CSV only. For best performance, keep file size under ~50MB.",
 )
 
-with st.expander("What should my CSV look like?"):
-    st.code(
-        "timestamp,order_id,item_name,quantity,unit_price,discount_amount,refund_amount,cogs_amount\n"
-        "2026-01-05T12:30:00Z,A1001,Iced Latte,1,5.50,0.50,0.00,2.00",
-        language="csv",
-    )
+
     st.download_button(
         "Download template CSV",
         data=_template_csv_bytes(),
