@@ -513,7 +513,7 @@ else:
     fig = px.line(daily_plot, x="date", y="revenue", color="period", title="Daily revenue: promo vs baseline")
     fig.add_vrect(x0=promo_start.floor("D"), x1=promo_end.floor("D"), fillcolor="green", opacity=0.08, line_width=0)
     st.plotly_chart(fig, use_container_width=True)
-
+)
 st.subheader("Top item drivers (Δ revenue)")
 item_delta = _top_item_drivers(promo_df, baseline_df, promo_days=promo_days, baseline_days=max(baseline_days, 1))
 if item_delta.empty:
