@@ -561,7 +561,7 @@ else:
 
 st.subheader("AI explanation")
 use_ai = st.toggle("Generate AI explanation", value=False, key="toggle_ai_explanation_main")
-context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
+context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun", key="context_text")
 ai_text = ""
 if use_ai:
     summary_payload = {
