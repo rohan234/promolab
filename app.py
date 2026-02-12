@@ -216,13 +216,7 @@ uploaded = st.file_uploader(
 )
 
 
-st.download_button(
-    "Download template CSV",
-    data=_template_csv_bytes(),
-    file_name="promolab_template.csv",
-    mime="text/csv",
-    key="template_in_schema_expander"
-)
+
 with st.expander("What should my CSV look like?"):
     st.markdown("**Required columns**")
     st.code(", ".join(REQUIRED_COLUMNS), language="text")
