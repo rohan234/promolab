@@ -430,7 +430,6 @@ with charts_tab:
     else:
         fig = px.line(daily_plot, x="date", y="revenue", color="period", title="Daily revenue: promo vs baseline")
         fig.add_vrect(x0=promo_start.floor("D"), x1=promo_end.floor("D"), fillcolor="green", opacity=0.08, line_width=0)
-        st.plotly_chart(fig, use_container_width=True)
         st.plotly_chart(fig, use_container_width=True, key="daily_revenue_chart")
 
     st.subheader("Top item lift drivers")
@@ -438,7 +437,6 @@ with charts_tab:
         st.info("No item-level data available.")
     else:
         fig_bar = px.bar(item_delta.head(15), x="item_name", y="delta_revenue", title="Top items driving revenue lift")
-        st.plotly_chart(fig_bar, use_container_width=True)
         st.plotly_chart(fig_bar, use_container_width=True, key="top_item_drivers_chart")
 
 with diagnostics_tab:
@@ -455,7 +453,6 @@ with diagnostics_tab:
         barmode="group",
         title="Promo window and post 7-day revenue vs baseline expectation",
     )
-    st.plotly_chart(fig_cannibalization, use_container_width=True)
     st.plotly_chart(fig_cannibalization, use_container_width=True, key="cannibalization_chart")
 
     if warnings:
