@@ -14,7 +14,12 @@ from promolab.io import DataValidationError, load_transactions
 from promolab.llm import generate_explanation
 from promolab.metrics import compute_lift_for_window, daily_revenue_series, get_baseline_window
 from promolab.report import generate_markdown_report
-
+st.set_page_config(
+    page_title="PromoLab",
+    page_icon="📈",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
 REQUIRED_COLUMNS = [
     "timestamp",
@@ -167,7 +172,6 @@ def _pull_forward_check(
     )
 
     return summary, chart_df
-
 
 st.title("PromoLab")
 st.caption("Deterministic promo lift analysis for small businesses—no made-up numbers.")
