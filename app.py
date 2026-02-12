@@ -34,6 +34,7 @@ if not api_key:
 
         st.caption(
             "Don't have a key? Get one at https://platform.openai.com/api-keys "
+            "Your key is never saved and disappears when you close the page."
             "(free trial credits may apply)."
         )
 
