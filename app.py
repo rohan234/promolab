@@ -275,7 +275,7 @@ st.info(f"Data health check: missing values across required columns = **{missing
 with st.expander("Preview first 5 rows"):
     st.dataframe(df.head(5), use_container_width=True)
 
-suggest_window = st.toggle("Show me a suggested promo window", value=False, key = "AI Suggest Window)
+suggest_window = st.toggle("Show me a suggested promo window", value=False, key = "AI Suggest Window")
 if suggest_window:
     suggested_start, suggested_end = _suggested_window(min_ts, max_ts)
     default_start, default_end = suggested_start.date(), suggested_end.date()
