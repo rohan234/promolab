@@ -290,8 +290,6 @@ else:
     default_end = max_ts.date()
     default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
 
-promo_start_date, promo_end_date = st.date_input(
-    "Pick the dates your promotion ran",
 default_end = max_ts.date()
 default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
 
