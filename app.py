@@ -462,7 +462,7 @@ with diagnostics_tab:
         st.success("No major validity warnings detected.")
 
     st.subheader("AI explanation")
-    use_ai = st.toggle("Generate AI explanation", value=False)
+    use_ai = st.toggle("Generate AI explanation", value=False,key="toggle_ai_explanation" )
     context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
     ai_text = ""
     if use_ai:
