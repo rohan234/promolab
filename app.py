@@ -7,13 +7,14 @@ import io
 
 import pandas as pd
 import plotly.express as px
+import os
 import streamlit as st
 
 from promolab.io import DataValidationError, load_transactions
 from promolab.llm import generate_explanation
 from promolab.metrics import compute_lift_for_window, daily_revenue_series, get_baseline_window
 from promolab.report import generate_markdown_report
-
+api_key = os.getenv("PROMOLAB_LLM_API_KEY") or st.secrets.get("PROMOLAB_LLM_API_KEY", None)
 st.set_page_config(page_title="PromoLab", layout="wide")
 
 REQUIRED_COLUMNS = [
