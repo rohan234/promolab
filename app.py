@@ -504,7 +504,7 @@ with export_tab:
 
 st.markdown("---")
 st.caption(
-    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions "
+    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions ",
     "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
 daily_plot = pd.concat([promo_daily, base_daily], ignore_index=True)
 if daily_plot.empty:
