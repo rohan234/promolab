@@ -51,6 +51,9 @@ export PROMOLAB_LLM_MODEL=gpt-4o-mini
 
 If not set, the app returns a safe placeholder explanation.
 
+
+Note: The Codex workspace may block external package installs; run locally or via Streamlit Cloud to launch the UI.
+
 ## Run tests
 
 ```bash

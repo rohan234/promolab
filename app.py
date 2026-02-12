@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+import io
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -12,6 +15,61 @@ from promolab.metrics import compute_lift_for_window, daily_revenue_series, get_
 from promolab.report import generate_markdown_report
 
 st.set_page_config(page_title="PromoLab", layout="wide")
+
+REQUIRED_COLUMNS = [
+    "timestamp",
+    "order_id",
+    "item_name",
+    "quantity",
+    "unit_price",
+    "discount_amount",
+    "refund_amount",
+]
+OPTIONAL_COLUMNS = ["cogs_amount"]
+
+
+@st.cache_data
+def _template_csv_bytes() -> bytes:
+    template = pd.DataFrame(
+        [
+            {
+                "timestamp": "2026-01-05T12:30:00Z",
+                "order_id": "A1001",
+                "item_name": "Iced Latte",
+                "quantity": 1,
+                "unit_price": 5.5,
+                "discount_amount": 0.5,
+                "refund_amount": 0.0,
+                "cogs_amount": 2.0,
+            },
+            {
+                "timestamp": "2026-01-05T12:31:00Z",
+                "order_id": "A1001",
+                "item_name": "Blueberry Muffin",
+                "quantity": 1,
+                "unit_price": 3.25,
+                "discount_amount": 0.0,
+                "refund_amount": 0.0,
+                "cogs_amount": 1.1,
+            },
+        ]
+    )
+    buffer = io.StringIO()
+    template.to_csv(buffer, index=False)
+    return buffer.getvalue().encode("utf-8")
+
+
+def _example_dataset_bytes() -> tuple[bytes, str]:
+    sample_path = Path("sample_data/transactions.csv")
+    if sample_path.exists():
+        return sample_path.read_bytes(), sample_path.name
+    return _template_csv_bytes(), "example_transactions.csv"
+
+
+def _suggested_window(min_ts: pd.Timestamp, max_ts: pd.Timestamp) -> tuple[pd.Timestamp, pd.Timestamp]:
+    end = max_ts.floor("D")
+    start = max(min_ts.floor("D"), end - pd.Timedelta(days=2))
+    return start, end
 st.title("PromoLab")
 st.caption("Upload → select promo window → baseline + lift, charts, diagnostics, AI explanation, and pull-forward checks")
 
@@ -113,6 +171,51 @@ def _pull_forward_check(
     return summary, chart_df
 
 
+st.title("PromoLab")
+st.caption("Deterministic promo lift analysis for small businesses—no made-up numbers.")
+
+with st.container(border=True):
+    st.subheader("Getting started (~2 minutes)")
+    step_cols = st.columns(3)
+    step_cols[0].markdown("**1) Upload CSV**  \\nUse your POS export or our template.")
+    step_cols[1].markdown("**2) Pick promo dates**  \\nChoose when your promotion ran.")
+    step_cols[2].markdown("**3) Review + export**  \\nSee lift, drivers, diagnostics, and download report.")
+    st.info("Outputs include KPI lift, top item drivers, validity diagnostics, pull-forward check, and exportable report.")
+
+utility_cols = st.columns(2)
+example_bytes, example_name = _example_dataset_bytes()
+utility_cols[0].download_button(
+    "Download template CSV",
+    data=_template_csv_bytes(),
+    file_name="promolab_template.csv",
+    mime="text/csv",
+)
+utility_cols[1].download_button(
+    "Download example dataset",
+    data=example_bytes,
+    file_name=example_name,
+    mime="text/csv",
+)
+
+with st.expander("What should my CSV look like?"):
+    st.markdown("**Required columns**")
+    st.code(", ".join(REQUIRED_COLUMNS), language="text")
+    st.markdown("**Optional columns**")
+    st.code(", ".join(OPTIONAL_COLUMNS), language="text")
+    st.markdown("**Example rows**")
+    st.code(_template_csv_bytes().decode("utf-8"), language="csv")
+
+with st.expander("Common export tips"):
+    st.markdown("- Ensure `timestamp` is ISO or a recognizable datetime.")
+    st.markdown("- Discounts/refunds should be numeric (`0` is allowed).")
+    st.markdown("- Use one row per line item; the same `order_id` can repeat.")
+
+uploaded = st.file_uploader(
+    "Upload Square-style transactions CSV (export from POS, or use our template)",
+    type=["csv"],
+    help="CSV only. For best performance, keep file size under ~50MB.",
+)
+
 uploaded = st.file_uploader("Upload transactions CSV", type=["csv"])
 if uploaded is None:
     st.info("Upload a CSV to begin.")
@@ -121,11 +224,45 @@ if uploaded is None:
 try:
     df = load_transactions(uploaded)
 except DataValidationError as exc:
+    msg = str(exc)
+    if "missing column:" in msg:
+        st.error(f"Your CSV is missing required columns: {msg.split('missing column:', 1)[1].strip()}")
+    else:
+        st.error(f"We couldn't read that file: {msg}")
+    st.download_button(
+        "Download template CSV",
+        data=_template_csv_bytes(),
+        file_name="promolab_template.csv",
+        mime="text/csv",
+        key="error_template_download",
+    )
     st.error(str(exc))
     st.stop()
 
 min_ts = pd.to_datetime(df["timestamp"], utc=True).min().floor("D")
 max_ts = pd.to_datetime(df["timestamp"], utc=True).max().floor("D")
+
+a, b, c = st.columns(3)
+a.metric("Date range", f"{min_ts.date()} → {max_ts.date()}")
+b.metric("Unique orders", int(df["order_id"].nunique()))
+c.metric("Rows", int(len(df)))
+
+missing_key_values = int(df[REQUIRED_COLUMNS].isna().sum().sum())
+st.info(f"Data health check: missing values across required columns = **{missing_key_values}**")
+with st.expander("Preview first 5 rows"):
+    st.dataframe(df.head(5), use_container_width=True)
+
+suggest_window = st.toggle("Show me a suggested promo window", value=False)
+if suggest_window:
+    suggested_start, suggested_end = _suggested_window(min_ts, max_ts)
+    default_start, default_end = suggested_start.date(), suggested_end.date()
+    st.info(f"Suggested window: {default_start} to {default_end} (recent 3-day window).")
+else:
+    default_end = max_ts.date()
+    default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
+
+promo_start_date, promo_end_date = st.date_input(
+    "Pick the dates your promotion ran",
 default_end = max_ts.date()
 default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
 
@@ -137,11 +274,14 @@ promo_start_date, promo_end_date = st.date_input(
 )
 
 if promo_start_date > promo_end_date:
+    st.warning("Promo window invalid: start date must be on or before end date.")
     st.error("Promo start must be on or before promo end.")
     st.stop()
 
 promo_start, promo_end = _to_utc_day_bounds(promo_start_date, promo_end_date)
 promo_days = _window_days(promo_start, promo_end)
+if promo_days < 2:
+    st.warning("A good promo window is usually at least 2–3 days so lift is less noisy.")
 
 baseline_method = st.selectbox(
     "Baseline method",
@@ -170,6 +310,7 @@ if baseline_method == "custom":
         max_value=max_ts.date(),
     )
     if base_start_date > base_end_date:
+        st.warning("Baseline window invalid: start date must be on or before end date.")
         st.error("Baseline start must be on or before baseline end.")
         st.stop()
     baseline_start, baseline_end = _to_utc_day_bounds(base_start_date, base_end_date)
@@ -199,6 +340,22 @@ else:
         baseline_days = sum(_window_days(w.start, w.end) for w in windows)
 
 promo_df = _slice(df, promo_start, promo_end)
+item_delta = _top_item_drivers(promo_df, baseline_df, promo_days=promo_days, baseline_days=max(baseline_days, 1))
+cannibalization_summary, cannibalization_chart = _pull_forward_check(df, promo_start, promo_end, baseline_df, baseline_days)
+
+warnings: list[str] = []
+if baseline_days < 14 or baseline_df.empty:
+    warnings.append("Baseline coverage too small for reliable comparison.")
+if promo_days < 3:
+    warnings.append("Promo window is very short; lift may be noisy.")
+if _gap_days(df, promo_start, promo_end) > 0:
+    warnings.append("Promo window contains missing data days (gaps).")
+if bool(cannibalization_summary["risk_flag"]):
+    warnings.append(
+        "Potential pull-forward risk: promo outperformed baseline, but the 7 days after promo underperformed baseline expectation."
+    )
+
+promo_daily = daily_revenue_series(df, promo_start, promo_end).assign(period="promo")
 
 st.subheader("KPI table")
 kpi_rows = []
@@ -229,6 +386,109 @@ else:
     parts = [daily_revenue_series(df, w.start, w.end) for w in baseline_meta["windows"]]
     base_daily = pd.concat(parts, ignore_index=True).groupby("date", as_index=False)["revenue"].mean().assign(period="baseline")
 
+kpi_rows = []
+for metric in ["revenue", "orders", "transactions", "aov", "discount_rate", "refund_rate", "gross_profit"]:
+    m = lift[metric]
+    pct = "n/a" if m["pct_change"] is None else f"{m['pct_change'] * 100:.2f}%"
+    kpi_rows.append({"metric": metric, "promo": m["promo"], "baseline": m["baseline"], "lift_abs": m["abs_change"], "lift_pct": pct})
+kpi_df = pd.DataFrame(kpi_rows)
+
+results_tab, charts_tab, diagnostics_tab, export_tab = st.tabs(["Results", "Charts", "Diagnostics", "Export"])
+
+with results_tab:
+    st.subheader("KPI summary + lift")
+    st.dataframe(kpi_df, use_container_width=True)
+    st.subheader("Top item drivers (Δ revenue)")
+    st.dataframe(item_delta[["item_name", "delta_revenue"]].head(15), use_container_width=True)
+
+with charts_tab:
+    st.subheader("Daily revenue")
+    daily_plot = pd.concat([promo_daily, base_daily], ignore_index=True)
+    if daily_plot.empty:
+        st.info("No daily revenue data available for selected windows.")
+    else:
+        fig = px.line(daily_plot, x="date", y="revenue", color="period", title="Daily revenue: promo vs baseline")
+        fig.add_vrect(x0=promo_start.floor("D"), x1=promo_end.floor("D"), fillcolor="green", opacity=0.08, line_width=0)
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.subheader("Top item lift drivers")
+    if item_delta.empty:
+        st.info("No item-level data available.")
+    else:
+        fig_bar = px.bar(item_delta.head(15), x="item_name", y="delta_revenue", title="Top items driving revenue lift")
+        st.plotly_chart(fig_bar, use_container_width=True)
+
+with diagnostics_tab:
+    st.info(
+        "Pull-forward risk means sales may have shifted earlier due to the promo; "
+        "we check for a post-promo dip vs baseline."
+    )
+    st.markdown(f"**Pull-forward flag:** {'YES' if cannibalization_summary['risk_flag'] else 'NO'}")
+    fig_cannibalization = px.bar(
+        cannibalization_chart,
+        x="period",
+        y="revenue",
+        color="series",
+        barmode="group",
+        title="Promo window and post 7-day revenue vs baseline expectation",
+    )
+    st.plotly_chart(fig_cannibalization, use_container_width=True)
+
+    if warnings:
+        for w in warnings:
+            st.warning(w)
+    else:
+        st.success("No major validity warnings detected.")
+
+    st.subheader("AI explanation")
+    use_ai = st.toggle("Generate AI explanation", value=False)
+    context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
+    ai_text = ""
+    if use_ai:
+        summary_payload = {
+            "promo_window": {"start": str(promo_start), "end": str(promo_end)},
+            "baseline_method": baseline_method,
+            "margin_assumption": margin_assumption,
+            "kpi_lift": lift,
+            "top_drivers": item_delta.head(5).to_dict(orient="records"),
+            "warnings": warnings,
+            "cannibalization_check": cannibalization_summary,
+            "context": context_text,
+        }
+        with st.spinner("Generating explanation..."):
+            ai_text = generate_explanation(summary_payload)
+        st.markdown(ai_text)
+    st.session_state["promolab_ai_text"] = ai_text
+
+with export_tab:
+    ai_text = st.session_state.get("promolab_ai_text") or None
+    report_md = generate_markdown_report(
+        promo_start=promo_start,
+        promo_end=promo_end,
+        baseline_method=baseline_method,
+        lift=lift,
+        drivers=item_delta,
+        warnings=warnings,
+        ai_explanation=ai_text,
+        cannibalization_summary=cannibalization_summary,
+    )
+    st.download_button(
+        "Download Promo Report (.md)",
+        data=report_md,
+        file_name="promolab_report.md",
+        mime="text/markdown",
+    )
+    st.download_button(
+        "Download KPI results (.csv)",
+        data=kpi_df.to_csv(index=False),
+        file_name="promolab_kpis.csv",
+        mime="text/csv",
+    )
+
+st.markdown("---")
+st.caption(
+    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions "
+    "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
 daily_plot = pd.concat([promo_daily, base_daily], ignore_index=True)
 if daily_plot.empty:
     st.info("No daily revenue data available for selected windows.")
