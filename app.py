@@ -504,8 +504,9 @@ with export_tab:
 
 st.markdown("---")
 st.caption(
-    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions ",
+    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your upload "
     "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
+)
 daily_plot = pd.concat([promo_daily, base_daily], ignore_index=True)
 if daily_plot.empty:
     st.info("No daily revenue data available for selected windows.")
@@ -513,7 +514,7 @@ else:
     fig = px.line(daily_plot, x="date", y="revenue", color="period", title="Daily revenue: promo vs baseline")
     fig.add_vrect(x0=promo_start.floor("D"), x1=promo_end.floor("D"), fillcolor="green", opacity=0.08, line_width=0)
     st.plotly_chart(fig, use_container_width=True)
-)
+
 st.subheader("Top item drivers (Δ revenue)")
 item_delta = _top_item_drivers(promo_df, baseline_df, promo_days=promo_days, baseline_days=max(baseline_days, 1))
 if item_delta.empty:
