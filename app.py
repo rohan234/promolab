@@ -520,9 +520,7 @@ st.caption(
     "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions "
     "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
 )
-    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your upload "
-    "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
-)
+
 daily_plot = pd.concat([promo_daily, base_daily], ignore_index=True)
 if daily_plot.empty:
     st.info("No daily revenue data available for selected windows.")
