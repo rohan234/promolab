@@ -594,4 +594,5 @@ st.download_button(
     data=report_md,
     file_name="promolab_report.md",
     mime="text/markdown",
+    key="download_report_md"
 )
