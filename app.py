@@ -70,8 +70,6 @@ def _suggested_window(min_ts: pd.Timestamp, max_ts: pd.Timestamp) -> tuple[pd.Ti
     end = max_ts.floor("D")
     start = max(min_ts.floor("D"), end - pd.Timedelta(days=2))
     return start, end
-st.title("PromoLab")
-st.caption("Upload → select promo window → baseline + lift, charts, diagnostics, AI explanation, and pull-forward checks")
 
 
 def _to_utc_day_bounds(start_date, end_date) -> tuple[pd.Timestamp, pd.Timestamp]:
