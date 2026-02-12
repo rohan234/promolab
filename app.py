@@ -182,6 +182,9 @@ with st.container(border=True):
     step_cols[2].markdown("**3) Review + export**  \\nSee lift, drivers, diagnostics, and download report.")
     st.info("Outputs include KPI lift, top item drivers, validity diagnostics, pull-forward check, and exportable report.")
 
+utility_cols = st.columns(1)
+example_bytes, example_name = _example_dataset_bytes()
+utility_cols[0].download_button(
 utility_cols = st.columns(2)
 example_bytes, example_name = _example_dataset_bytes()
 utility_cols[0].download_button(
@@ -215,6 +218,13 @@ with st.expander("What should my CSV look like?"):
         "timestamp,order_id,item_name,quantity,unit_price,discount_amount,refund_amount,cogs_amount\n"
         "2026-01-05T12:30:00Z,A1001,Iced Latte,1,5.50,0.50,0.00,2.00",
         language="csv",
+    )
+    st.download_button(
+        "Download template CSV",
+        data=_template_csv_bytes(),
+        file_name="promolab_template.csv",
+        mime="text/csv",
+        key="template_in_schema_expander",
     )
 with st.expander("What should my CSV look like?"):
     st.markdown("**Required columns**")
@@ -280,6 +290,8 @@ else:
     default_end = max_ts.date()
     default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
 
+promo_start_date, promo_end_date = st.date_input(
+    "Pick the dates your promotion ran",
 default_end = max_ts.date()
 default_start = max(min_ts, max_ts - pd.Timedelta(days=6)).date()
 
@@ -426,6 +438,7 @@ with charts_tab:
     else:
         fig = px.line(daily_plot, x="date", y="revenue", color="period", title="Daily revenue: promo vs baseline")
         fig.add_vrect(x0=promo_start.floor("D"), x1=promo_end.floor("D"), fillcolor="green", opacity=0.08, line_width=0)
+        st.plotly_chart(fig, use_container_width=True)
         st.plotly_chart(fig, use_container_width=True, key="daily_revenue_chart")
 
     st.subheader("Top item lift drivers")
@@ -433,6 +446,7 @@ with charts_tab:
         st.info("No item-level data available.")
     else:
         fig_bar = px.bar(item_delta.head(15), x="item_name", y="delta_revenue", title="Top items driving revenue lift")
+        st.plotly_chart(fig_bar, use_container_width=True)
         st.plotly_chart(fig_bar, use_container_width=True, key="top_item_drivers_chart")
 
 with diagnostics_tab:
@@ -449,6 +463,7 @@ with diagnostics_tab:
         barmode="group",
         title="Promo window and post 7-day revenue vs baseline expectation",
     )
+    st.plotly_chart(fig_cannibalization, use_container_width=True)
     st.plotly_chart(fig_cannibalization, use_container_width=True, key="cannibalization_chart")
 
     if warnings:
@@ -504,6 +519,9 @@ with export_tab:
 
 st.markdown("---")
 st.caption(
+    "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your uploaded transactions "
+    "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
+)
     "How this differs from ChatGPT: PromoLab computes deterministic KPIs directly from your upload "
     "and applies guardrail diagnostics (baseline quality, gaps, pull-forward) before interpretation."
 )
