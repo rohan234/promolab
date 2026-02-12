@@ -464,6 +464,8 @@ with diagnostics_tab:
     st.subheader("AI explanation")
     context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
     ai_text = ""
+    use_ai = st.toggle("Generate AI explanation", value=False, key="toggle_ai_explanation")
+
     if use_ai:
         summary_payload = {
             "promo_window": {"start": str(promo_start), "end": str(promo_end)},
