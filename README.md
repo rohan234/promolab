@@ -3,6 +3,7 @@
 PromoLab is a Streamlit app for deterministic promotion-impact analysis.
 
 ## Features (Milestones 0–6)
+The Codex workspace blocks external package installs; run locally or via Streamlit Cloud to launch the UI.
 
 - Upload and validate transactions CSV against a strict schema.
 - Select a promo date window and baseline method (`matched_4w`, `last_28d`, `custom`).
