@@ -275,7 +275,7 @@ st.info(f"Data health check: missing values across required columns = **{missing
 with st.expander("Preview first 5 rows"):
     st.dataframe(df.head(5), use_container_width=True)
 
-suggest_window = st.toggle("Show me a suggested promo window", value=False)
+suggest_window = st.toggle("Show me a suggested promo window", value=False, key = "AI Suggest Window)
 if suggest_window:
     suggested_start, suggested_end = _suggested_window(min_ts, max_ts)
     default_start, default_end = suggested_start.date(), suggested_end.date()
@@ -462,7 +462,6 @@ with diagnostics_tab:
         st.success("No major validity warnings detected.")
 
     st.subheader("AI explanation")
-    use_ai = st.toggle("Generate AI explanation", value=False,key="toggle_ai_explanation" )
     context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
     ai_text = ""
     if use_ai:
@@ -559,7 +558,7 @@ else:
     st.success("No major validity warnings detected.")
 
 st.subheader("AI explanation")
-use_ai = st.toggle("Generate AI explanation", value=False)
+use_ai = st.toggle("Generate AI explanation", value=False, key="toggle_ai_explanation")
 context_text = st.text_area("Optional context", placeholder="Promo was 10% off drinks Fri–Sun")
 ai_text = ""
 if use_ai:
