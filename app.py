@@ -184,7 +184,7 @@ with st.container(border=True):
 
 utility_cols = st.columns(1)
 example_bytes, example_name = _example_dataset_bytes()
-utility_cols[0].download_button(
+
 utility_cols = st.columns(2)
 example_bytes, example_name = _example_dataset_bytes()
 utility_cols[0].download_button(
