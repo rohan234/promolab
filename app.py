@@ -239,13 +239,7 @@ with st.expander("Common export tips"):
     st.markdown("- Discounts/refunds should be numeric (`0` is allowed).")
     st.markdown("- Use one row per line item; the same `order_id` can repeat.")
 
-uploaded = st.file_uploader(
-    "Upload Square-style transactions CSV (export from POS, or use our template)",
-    type=["csv"],
-    help="CSV only. For best performance, keep file size under ~50MB.",
-)
 
-uploaded = st.file_uploader("Upload transactions CSV", type=["csv"])
 if uploaded is None:
     st.info("Upload a CSV to begin.")
     st.stop()
