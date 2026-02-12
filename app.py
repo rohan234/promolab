@@ -197,6 +197,25 @@ utility_cols[1].download_button(
     mime="text/csv",
 )
 
+st.subheader("Step 1: Upload your transactions file")
+st.markdown(
+    "Upload a CSV export from your POS system with one row per item sold. "
+    "Required columns are: `timestamp`, `order_id`, `item_name`, `quantity`, `unit_price`, "
+    "`discount_amount`, and `refund_amount`."
+)
+
+uploaded = st.file_uploader(
+    "Choose your transactions CSV file",
+    type=["csv"],
+    help="CSV only. For best performance, keep file size under ~50MB.",
+)
+
+with st.expander("What should my CSV look like?"):
+    st.code(
+        "timestamp,order_id,item_name,quantity,unit_price,discount_amount,refund_amount,cogs_amount\n"
+        "2026-01-05T12:30:00Z,A1001,Iced Latte,1,5.50,0.50,0.00,2.00",
+        language="csv",
+    )
 with st.expander("What should my CSV look like?"):
     st.markdown("**Required columns**")
     st.code(", ".join(REQUIRED_COLUMNS), language="text")
