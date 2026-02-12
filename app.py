@@ -558,6 +558,32 @@ if warnings:
         st.warning(w)
 else:
     st.success("No major validity warnings detected.")
+st.set_page_config(page_title="PromoLab", layout="wide")
+api_key = os.getenv("PROMOLAB_LLM_API_KEY")
+
+# If no server key, allow user to paste one
+if not api_key:
+    with st.container(border=True):
+        st.markdown("### 🔒 Enable AI explanation (optional)")
+        st.write(
+            "To generate AI insights, paste your OpenAI API key below. "
+            "Your key is used only for this session and is not stored."
+        )
+
+        user_key = st.text_input(
+            "OpenAI API key",
+            type="password",
+            key="user_openai_key",
+        )
+
+        st.caption(
+            "Don't have a key? Get one at https://platform.openai.com/api-keys "
+            "Your key is never saved and disappears when you close the page."
+            "(free trial credits may apply)."
+        )
+
+        if user_key:
+            api_key = user_key
 
 st.subheader("AI explanation")
 use_ai = st.toggle("Generate AI explanation", value=False, key="toggle_ai_explanation_main")
@@ -596,29 +622,3 @@ st.download_button(
     mime="text/markdown",
     key="download_report_md"
 )
-st.set_page_config(page_title="PromoLab", layout="wide")
-api_key = os.getenv("PROMOLAB_LLM_API_KEY")
-
-# If no server key, allow user to paste one
-if not api_key:
-    with st.container(border=True):
-        st.markdown("### 🔒 Enable AI explanation (optional)")
-        st.write(
-            "To generate AI insights, paste your OpenAI API key below. "
-            "Your key is used only for this session and is not stored."
-        )
-
-        user_key = st.text_input(
-            "OpenAI API key",
-            type="password",
-            key="user_openai_key",
-        )
-
-        st.caption(
-            "Don't have a key? Get one at https://platform.openai.com/api-keys "
-            "Your key is never saved and disappears when you close the page."
-            "(free trial credits may apply)."
-        )
-
-        if user_key:
-            api_key = user_key
